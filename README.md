@@ -259,11 +259,8 @@ The admin panel (`farmsetu-admin/index.html`) is a standalone HTML page using th
 
 ## Screenshots
 
-> _Add screenshots/GIFs of the Farmer App, Customer App, and Admin Panel here once available — e.g. `docs/screenshots/`._
-
 | Customer Home | Farmer Dashboard | Admin Panel |
-|---|---|---|
-| _coming soon_ | _coming soon_ | _coming soon_ |
+
 
 ---
 
