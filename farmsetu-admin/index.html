@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmsetu Admin</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --green: #2E7D32; --green2: #4CAF50; --orange: #E88F3F;
+    --blue: #5CB8E4; --purple: #9B7FE8; --red: #E53935;
+    --bg: #0D1117; --surface: #161B22; --card: #1C2128;
+    --border: #30363D; --t1: #E6EDF3; --t2: #8B949E; --t3: #484F58;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--t1); min-height: 100vh; }
+
+  /* Login */
+  #login-screen { display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 20px; }
+  .login-card { background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px; width: 100%; max-width: 400px; }
+  .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .login-logo-icon { width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--green), var(--green2));
+    border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; font-size: 24px; }
+  .login-logo h1 { font-size: 22px; font-weight: 800; }
+  .login-logo span { font-size: 12px; color: var(--t2); }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; color: var(--t2);
+    margin-bottom: 6px; font-weight: 600; }
+  input { width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; color: var(--t1); font-size: 14px;
+    outline: none; transition: border-color 0.2s; }
+  input:focus { border-color: var(--green2); }
+  .btn-primary { width: 100%; padding: 12px; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    background: linear-gradient(135deg, var(--green), var(--green2));
+    color: white; margin-top: 8px; }
+  .error-msg { background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.3);
+    color: var(--red); padding: 10px 14px; border-radius: 8px; font-size: 13px;
+    margin-bottom: 14px; display: none; }
+
+  /* App */
+  #app { display: none; }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 20px 0; display: flex; flex-direction: column; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px;
+    padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .sidebar-logo-icon { width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--green), var(--green2));
+    border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 18px; }
+  .sidebar-logo span { font-weight: 800; font-size: 16px; }
+  .sidebar-logo small { color: var(--t2); font-size: 11px; display: block; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+    cursor: pointer; color: var(--t2); font-size: 14px; font-weight: 500;
+    transition: all 0.15s; position: relative; }
+  .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--t1); }
+  .nav-item.active { background: rgba(76,175,80,0.1); color: var(--green2); font-weight: 600; }
+  .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0;
+    bottom: 0; width: 3px; background: var(--green2); border-radius: 0 2px 2px 0; }
+  .nav-badge { margin-left: auto; background: var(--orange); color: white;
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .sidebar-footer { margin-top: auto; padding: 16px 20px;
+    border-top: 1px solid var(--border); }
+  .logout-btn { display: flex; align-items: center; gap: 8px; color: var(--red);
+    font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px 12px;
+    border-radius: 8px; transition: background 0.15s; }
+  .logout-btn:hover { background: rgba(229,57,53,0.1); }
+  .main-content { margin-left: 220px; padding: 28px; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Stats */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px; }
+  .stat-card-top { display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 10px; }
+  .stat-label { font-size: 12px; color: var(--t2); font-weight: 500; }
+  .stat-icon { font-size: 18px; }
+  .stat-value { font-size: 26px; font-weight: 800; color: var(--t1); }
+  .stat-sub { font-size: 11px; color: var(--t3); margin-top: 4px; }
+  .alert-banner { background: rgba(232,143,63,0.1); border: 1px solid rgba(232,143,63,0.3);
+    border-radius: 12px; padding: 14px 18px; display: flex; align-items: center;
+    gap: 12px; margin-bottom: 24px; font-size: 14px; color: var(--orange);
+    font-weight: 600; }
+
+  /* Farmer cards */
+  .farmer-card { background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
+  .farmer-card.pending { border-color: rgba(232,143,63,0.4); }
+  .farmer-card-header { display: flex; align-items: center; gap: 14px; padding: 16px 18px; }
+  .farmer-avatar { width: 48px; height: 48px; background: rgba(76,175,80,0.15);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: var(--green2); flex-shrink: 0; }
+  .farmer-info { flex: 1; }
+  .farmer-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+  .farmer-owner { font-size: 12px; color: var(--t2); }
+  .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .status-submitted  { background: rgba(92,184,228,0.15);  color: var(--blue); }
+  .status-govtReview { background: rgba(232,143,63,0.15);  color: var(--orange); }
+  .status-adminReview{ background: rgba(155,127,232,0.15); color: var(--purple); }
+  .status-approved   { background: rgba(76,175,80,0.15);   color: var(--green2); }
+  .status-rejected   { background: rgba(229,57,53,0.15);   color: var(--red); }
+  .divider { height: 1px; background: var(--border); margin: 0 18px; }
+  .farmer-details { padding: 14px 18px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 8px; }
+  .detail-row { display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--t2); }
+  .doc-row { padding: 12px 18px; display: flex; gap: 10px; }
+  .doc-chip { flex: 1; background: rgba(76,175,80,0.07);
+    border: 1px solid rgba(76,175,80,0.2); border-radius: 8px; padding: 10px 12px; }
+  .doc-chip-label { color: var(--green2); font-weight: 600; font-size: 10px; margin-bottom: 3px; }
+  .doc-chip-value { color: var(--t1); font-weight: 600; font-size: 12px; }
+  .farmer-bio { margin: 0 18px 12px; padding: 10px; background: var(--surface);
+    border-radius: 8px; font-size: 12px; color: var(--t2); line-height: 1.5; }
+  .action-row { padding: 12px 18px; border-top: 1px solid var(--border);
+    display: flex; gap: 10px; }
+  .btn-approve { background: var(--green2); color: white; padding: 8px 16px;
+    border-radius: 6px; border: none; font-size: 12px; font-weight: 700;
+    cursor: pointer; flex: 2; }
+  .btn-reject { background: transparent; color: var(--red);
+    border: 1px solid var(--red); padding: 8px 16px; border-radius: 6px;
+    font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; }
+  .whatsapp-note { font-size: 11px; color: var(--t3); margin-top: 8px;
+    display: flex; align-items: center; gap: 5px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 10px;
+    padding: 4px; margin-bottom: 20px; width: fit-content; }
+  .tab { padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    cursor: pointer; color: var(--t2); transition: all 0.2s; }
+  .tab.active { background: var(--green2); color: white; }
+
+  /* Page header */
+  .page-header { display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; }
+  .page-title { font-size: 22px; font-weight: 800; }
+  .pending-count { background: rgba(232,143,63,0.1); border: 1px solid rgba(232,143,63,0.3);
+    color: var(--orange); padding: 4px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 700; }
+
+  /* Products */
+  .product-card { background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px; display: flex; align-items: center;
+    gap: 14px; margin-bottom: 10px; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; max-width: 440px; width: 100%; }
+  .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .modal p { color: var(--t2); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-cancel { padding: 10px 20px; border: 1px solid var(--border);
+    border-radius: 8px; background: transparent; color: var(--t2);
+    font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-confirm { padding: 10px 20px; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 700; cursor: pointer; color: white; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--t2); }
+  .empty-state .emoji { font-size: 52px; margin-bottom: 16px; }
+  .loading { text-align: center; padding: 40px; color: var(--t2); }
+
+  /* Live indicator */
+  .live-badge { display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3);
+    color: var(--green2); font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px; }
+  .live-dot { width: 6px; height: 6px; background: var(--green2);
+    border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🌿</div>
+      <div><h1>Farmsetu Admin</h1><span>Control Centre</span></div>
+    </div>
+    <div class="error-msg" id="login-error"></div>
+    <div class="form-group">
+      <label>Admin Email</label>
+      <input type="email" id="admin-email" placeholder="admin@farmsetu.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="admin-password" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Access Admin Portal</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🌿</div>
+      <div><span>Farmsetu</span><small>Admin Portal</small></div>
+    </div>
+    <div class="nav-item active" onclick="showPage('dashboard', this)">📊 Dashboard</div>
+    <div class="nav-item" onclick="showPage('farmers', this)" id="nav-farmers">🌾 Farmers</div>
+    <div class="nav-item" onclick="showPage('products', this)">🛒 Products</div>
+    <div class="sidebar-footer">
+      <div class="logout-btn" onclick="doLogout()">🚪 Sign Out</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div style="color:var(--t2);font-size:13px;margin-top:2px">
+            Welcome back, Admin 👋 &nbsp;
+            <span class="live-badge"><span class="live-dot"></span>Live</span>
+          </div>
+        </div>
+      </div>
+      <div id="dashboard-alert" class="alert-banner" style="display:none">
+        ⚠️ <span id="alert-text"></span>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <span class="stat-label">Total Farmers</span>
+            <span class="stat-icon">🌾</span>
+          </div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-sub" id="stat-pending-sub">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <span class="stat-label">Approved</span>
+            <span class="stat-icon">✅</span>
+          </div>
+          <div class="stat-value" id="stat-approved" style="color:var(--green2)">—</div>
+          <div class="stat-sub">Active on platform</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <span class="stat-label">Pending Review</span>
+            <span class="stat-icon">⏳</span>
+          </div>
+          <div class="stat-value" id="stat-pending" style="color:var(--orange)">—</div>
+          <div class="stat-sub">Awaiting approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-top">
+            <span class="stat-label">Total Products</span>
+            <span class="stat-icon">🛒</span>
+          </div>
+          <div class="stat-value" id="stat-products" style="color:var(--blue)">—</div>
+          <div class="stat-sub">Listed by farmers</div>
+        </div>
+      </div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:14px">Recent Registrations</div>
+      <div id="recent-list"></div>
+    </div>
+
+    <!-- Farmers -->
+    <div class="page" id="page-farmers">
+      <div class="page-header">
+        <div class="page-title">Farmer Applications</div>
+        <div class="pending-count" id="pending-badge"></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('pending', this)">Pending</div>
+        <div class="tab" onclick="showTab('approved', this)">Approved</div>
+        <div class="tab" onclick="showTab('rejected', this)">Rejected</div>
+        <div class="tab" onclick="showTab('all', this)">All</div>
+      </div>
+      <div id="farmers-list"></div>
+    </div>
+
+    <!-- Products -->
+    <div class="page" id="page-products">
+      <div class="page-header">
+        <div class="page-title">All Products</div>
+        <div id="products-count" style="color:var(--t2);font-size:13px"></div>
+      </div>
+      <div id="products-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-body"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" id="modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────────
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, onSnapshot, doc,
+           updateDoc, query, orderBy }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getAuth, signInWithEmailAndPassword, signOut }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: "YOUR_WEB_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_WEB_APP_ID"
+};  // Get these values from: Firebase Console → Project Settings → General → Your apps → Web app
+    // ─────────────────────────────────────────────────────────────
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Admin access is controlled entirely by Firebase Authentication —
+  // only accounts you create in Firebase Console → Authentication →
+  // Users can sign in here. No password is stored in this file.
+
+  let allFarmers  = [];
+  let allProducts = [];
+  let currentTab  = 'pending';
+
+  // ── Login ────────────────────────────────────────────────────
+  window.doLogin = async function() {
+    const email = document.getElementById('admin-email').value.trim();
+    const pass  = document.getElementById('admin-password').value;
+    const err   = document.getElementById('login-error');
+    err.style.display = 'none';
+
+    if (!email || !pass) {
+      err.style.display = 'block';
+      err.textContent   = 'Please enter both email and password.';
+      return;
+    }
+
+    try {
+      // Firebase Auth itself validates the credentials — this app
+      // never compares against a stored password of its own.
+      await signInWithEmailAndPassword(auth, email, pass);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      startListeners();
+    } catch (e) {
+      // Auth failed — do NOT grant dashboard access.
+      err.style.display = 'block';
+      err.textContent   = 'Invalid credentials.';
+      console.warn('Firebase Auth sign-in failed:', e.message);
+    }
+  };
+
+  window.doLogout = async function() {
+    try { await signOut(auth); } catch(_) {}
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  };
+
+  // ── Real-time Firestore listeners ────────────────────────────
+  function showDataError(msg) {
+    const alert = document.getElementById('dashboard-alert');
+    const text  = document.getElementById('alert-text');
+    alert.style.display = 'flex';
+    alert.style.background = 'rgba(229,57,53,0.1)';
+    alert.style.borderColor = 'rgba(229,57,53,0.3)';
+    alert.style.color = 'var(--red)';
+    text.textContent = '⚠️ ' + msg;
+  }
+
+  function startListeners() {
+    // Farmers — real-time
+    onSnapshot(
+      query(collection(db, 'farmers'), orderBy('registeredAt', 'desc')),
+      snap => {
+        allFarmers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        updateDashboard();
+        renderFarmers();
+        renderRecent();
+      },
+      err => {
+        console.error('Farmers listener error:', err);
+        // Show actionable error on dashboard
+        if (err.code === 'permission-denied') {
+          showDataError('Access denied. Add admin@farmsetu.com to Firebase Auth first.');
+        } else if (err.message && err.message.includes('index')) {
+          showDataError('Firestore index missing. Check browser console for the index creation link.');
+        } else {
+          showDataError('Farmers data error: ' + err.message);
+        }
+        // Fallback: try without orderBy
+        onSnapshot(collection(db, 'farmers'), snap => {
+          allFarmers = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a,b) => (b.registeredAt?.seconds||0) - (a.registeredAt?.seconds||0));
+          updateDashboard(); renderFarmers(); renderRecent();
+        });
+      }
+    );
+
+    // Products — real-time
+    onSnapshot(
+      query(collection(db, 'products'), orderBy('createdAt', 'desc')),
+      snap => {
+        allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        document.getElementById('stat-products').textContent = allProducts.length;
+        document.getElementById('products-count').textContent =
+          `${allProducts.length} products listed`;
+        renderProducts();
+      },
+      err => {
+        console.error('Products listener error:', err);
+        // Fallback: try without orderBy
+        onSnapshot(collection(db, 'products'), snap => {
+          allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+          document.getElementById('stat-products').textContent = allProducts.length;
+          document.getElementById('products-count').textContent = `${allProducts.length} products listed`;
+          renderProducts();
+        });
+      }
+    );
+  }
+
+  // ── Dashboard ────────────────────────────────────────────────
+  function updateDashboard() {
+    const pending  = allFarmers.filter(f => [0,1,2].includes(f.status)).length;
+    const approved = allFarmers.filter(f => f.status === 3).length;
+
+    document.getElementById('stat-total').textContent    = allFarmers.length;
+    document.getElementById('stat-approved').textContent = approved;
+    document.getElementById('stat-pending').textContent  = pending;
+    document.getElementById('stat-pending-sub').textContent =
+      `${pending} pending review`;
+
+    const alert = document.getElementById('dashboard-alert');
+    if (pending > 0) {
+      alert.style.display = 'flex';
+      document.getElementById('alert-text').textContent =
+        `${pending} farmer application${pending > 1 ? 's' : ''} waiting for approval!`;
+      const nb = document.getElementById('nav-farmers');
+      nb.innerHTML = `🌾 Farmers <span class="nav-badge">${pending}</span>`;
+      document.getElementById('pending-badge').textContent = `${pending} Pending`;
+    } else {
+      alert.style.display = 'none';
+      document.getElementById('nav-farmers').innerHTML = '🌾 Farmers';
+      document.getElementById('pending-badge').textContent = '';
+    }
+  }
+
+  function renderRecent() {
+    const el   = document.getElementById('recent-list');
+    const list = allFarmers.slice(0, 5);
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-state"><div class="emoji">🌾</div><div>No registrations yet</div></div>';
+      return;
+    }
+    el.innerHTML = list.map(f => farmerCardHTML(f, false)).join('');
+  }
+
+  // ── Farmers tab ──────────────────────────────────────────────
+  window.showTab = function(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderFarmers();
+  };
+
+  function renderFarmers() {
+    const el = document.getElementById('farmers-list');
+    let list;
+    switch (currentTab) {
+      case 'pending':  list = allFarmers.filter(f => [0,1,2].includes(f.status)); break;
+      case 'approved': list = allFarmers.filter(f => f.status === 3); break;
+      case 'rejected': list = allFarmers.filter(f => f.status === 4); break;
+      default:         list = allFarmers;
+    }
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-state"><div class="emoji">✅</div><div>No applications here</div></div>';
+      return;
+    }
+    el.innerHTML = list.map(f =>
+      farmerCardHTML(f, currentTab === 'pending' || currentTab === 'all')
+    ).join('');
+  }
+
+  const STATUS_LABELS  = ['Submitted','Govt. Review','Admin Review','Approved','Rejected'];
+  const STATUS_CLASSES = ['submitted','govtReview','adminReview','approved','rejected'];
+
+  function farmerCardHTML(f, showActions) {
+    const initial   = (f.farmName || '?')[0].toUpperCase();
+    const isPending = [0,1,2].includes(f.status);
+    const days      = daysSince(f.registeredAt?.seconds
+      ? new Date(f.registeredAt.seconds * 1000) : new Date());
+
+    return `
+    <div class="farmer-card ${isPending ? 'pending' : ''}">
+      <div class="farmer-card-header">
+        <div class="farmer-avatar">${initial}</div>
+        <div class="farmer-info">
+          <div class="farmer-name">${f.farmName || '—'}</div>
+          <div class="farmer-owner">${f.name || '—'}</div>
+        </div>
+        <div>
+          <div class="status-badge status-${STATUS_CLASSES[f.status] || 'submitted'}">
+            ${STATUS_LABELS[f.status] || 'Unknown'}
+          </div>
+          <div style="font-size:10px;color:var(--t3);margin-top:4px;text-align:right">${days}</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="farmer-details">
+        <div class="detail-row">📍 ${f.location || '—'}</div>
+        <div class="detail-row">📂 ${f.category || '—'}</div>
+        <div class="detail-row">✉️ ${f.email || '—'}</div>
+        <div class="detail-row">📞 ${f.phone || '—'}</div>
+      </div>
+      <div class="doc-row">
+        <div class="doc-chip">
+          <div class="doc-chip-label">AADHAAR ✓</div>
+          <div class="doc-chip-value">****-****-${(f.aadhaarNumber || '0000').slice(-4)}</div>
+        </div>
+        <div class="doc-chip">
+          <div class="doc-chip-label">FARM PASSBOOK ✓</div>
+          <div class="doc-chip-value">${f.passbookNumber || '—'}</div>
+        </div>
+      </div>
+      ${f.bio ? `<div class="farmer-bio">${f.bio}</div>` : ''}
+      ${showActions && isPending ? `
+      <div class="action-row">
+        <button class="btn-reject"
+          onclick="confirmReject('${f.id}', '${f.farmName}')">✕ Reject</button>
+        <button class="btn-approve"
+          onclick="confirmApprove('${f.id}', '${(f.farmName||'').replace(/'/g,"\\'")}', '${f.phone}', '${(f.name||'').replace(/'/g,"\\'")}')">
+          ✓ Approve & Activate
+        </button>
+      </div>
+      <div style="padding:0 18px 12px">
+        <div class="whatsapp-note">💬 Approving will open WhatsApp to notify the farmer</div>
+      </div>` : ''}
+    </div>`;
+  }
+
+  // ── Approve / Reject ─────────────────────────────────────────
+  window.confirmApprove = function(id, farmName, phone, name) {
+    showModal(
+      '✅ Approve Farmer',
+      `Approve <strong>${farmName}</strong>? Their account will be activated and you'll be prompted to notify them via WhatsApp.`,
+      '#4CAF50', 'Approve',
+      () => doApprove(id, farmName, phone, name)
+    );
+  };
+
+  window.confirmReject = function(id, farmName) {
+    showModal(
+      '✕ Reject Application',
+      `Reject <strong>${farmName}</strong>? The farmer will not be able to access the platform.`,
+      '#E53935', 'Reject',
+      () => doReject(id)
+    );
+  };
+
+  async function doApprove(id, farmName, phone, name) {
+    try {
+      await updateDoc(doc(db, 'farmers', id), { status: 3 });
+      const msg = encodeURIComponent(
+        `Hello ${name}! 🎉\n\n` +
+        `Your farm registration for *${farmName}* on *Farmsetu* has been approved!\n\n` +
+        `✅ Your account is now active.\n` +
+        `📱 Log in to the Farmsetu farmer app and start listing your products.\n\n` +
+        `Welcome to the Farmsetu family! 🌿`
+      );
+      const clean = (phone || '').replace(/\D/g, '');
+      const wa    = clean.startsWith('91') ? clean : `91${clean}`;
+      window.open(`https://wa.me/${wa}?text=${msg}`, '_blank');
+    } catch(e) {
+      alert('Error approving: ' + e.message);
+    }
+  }
+
+  async function doReject(id) {
+    try {
+      await updateDoc(doc(db, 'farmers', id), { status: 4 });
+    } catch(e) {
+      alert('Error rejecting: ' + e.message);
+    }
+  }
+
+  // ── Products ─────────────────────────────────────────────────
+  function renderProducts() {
+    const el = document.getElementById('products-list');
+    if (!allProducts.length) {
+      el.innerHTML = '<div class="empty-state"><div class="emoji">🛒</div><div>No products yet</div></div>';
+      return;
+    }
+    el.innerHTML = allProducts.map(p => `
+      <div class="product-card">
+        <div style="font-size:28px">🥬</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px">
+            ${p.name}
+            ${p.isOrganic ? '<span style="background:var(--green2);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">ORGANIC</span>' : ''}
+          </div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px">
+            📂 ${p.category} &nbsp;·&nbsp; 📦 Stock: ${p.stock} &nbsp;·&nbsp;
+            🏪 ${p.farmName || '—'} &nbsp;·&nbsp;
+            ${p.isAvailable ? '<span style="color:var(--green2)">● Available</span>' : '<span style="color:var(--t3)">● Unavailable</span>'}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700;font-size:15px;color:var(--green2)">
+            ₹${p.price} <span style="font-size:11px;color:var(--t2)">${p.unit}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Navigation ───────────────────────────────────────────────
+  window.showPage = function(page, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`page-${page}`).classList.add('active');
+    el.classList.add('active');
+  };
+
+  // ── Modal ────────────────────────────────────────────────────
+  function showModal(title, body, color, label, onConfirm) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').innerHTML    = body;
+    const btn = document.getElementById('modal-confirm');
+    btn.textContent      = label;
+    btn.style.background = color;
+    btn.onclick          = () => { onConfirm(); closeModal(); };
+    document.getElementById('modal').classList.add('show');
+  }
+  window.closeModal = function() {
+    document.getElementById('modal').classList.remove('show');
+  };
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function daysSince(date) {
+    const diff = Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    return `${diff} days ago`;
+  }
+
+  document.getElementById('admin-password')
+    .addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin(); });
+</script>
+</body>
+</html>
